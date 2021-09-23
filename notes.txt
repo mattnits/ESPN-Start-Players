@@ -1,0 +1,5 @@
+1. Get the number of slots per position
+2. Get players status (if they play that day/ if they're injured)
+3. Figure out which player is best suited to play that day
+
+- Need to move players that have multiple positions to play a different position to clear up space
