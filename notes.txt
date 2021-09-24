@@ -3,3 +3,10 @@
 3. Figure out which player is best suited to play that day
 
 - Need to move players that have multiple positions to play a different position to clear up space
+
+
+// Tuesday november 16
+// Zibinejad in UTIL spot while C is left open
+// Put other player into UTIL and move Z to C
+
+// Make sure IR players dont go into open spots
