@@ -1,10 +1,11 @@
 class Players {
-    constructor(name, position, isPlaying, isInjured, currentPos) {
+    constructor(name, position, isPlaying, isInjured, currentPos, index) {
         this.name = name;
         this.position = position;
         this.isPlaying = isPlaying;
         this.isInjured = isInjured;
         this.currentPos = currentPos;
+        this.index = index;
     }
 }
 
@@ -41,14 +42,27 @@ const observer = new MutationObserver(mutations => {
 });
 observer.observe(document.body, { childList: true, subtree: true });
 
-// Start active players
+// Starts active players
 function startPlayers() {
     var playerList = initPlayerList();
     var positionMap = initPositionMap();
 
     getPlayers(positionMap, playerList);
-    console.log(playerList)
-    var test = isPositionLineupFull(playerList, "C");
+    // console.log(playerList, positionMap);
+    var posLeagueType = checkPositionLeagueType(playerList);
+
+    if (doesBenchPlay(playerList) && !isLineupFull(playerList, posLeagueType)) {
+        setLineup(positionMap, playerList);
+    }
+
+
+    var playersTest = playerList.get("C");
+
+    // setTimeout(function() {clickPlayer(playersTest[0])}, 3000);
+    // setTimeout(clickPlayer(playerMovingOut), 5000);
+
+    // console.log(playerList);
+      
     
     return;
 }
@@ -119,7 +133,7 @@ function getPlayers(positionMap, playerList) {
             }
             // Actual Position(s)
             positions = table[0].children[i].children[1].children[0].children[0].children[1].children[0].children[1].children[1].innerHTML;
-            tempPlayer = new Players(name, positions, isPlaying, isInjured, currentPos);
+            tempPlayer = new Players(name, positions, isPlaying, isInjured, currentPos, i);
         }
 
         // Create a function to do all the work inside these statements to make it more readable
@@ -168,14 +182,9 @@ function updateMaps(position, player, positionMap, playerList) {
     return;
 }
 
-function clickButton() {
-    var table = document.getElementsByClassName("Table__TBODY");
-    console.log(table[0].children[0].children[2].children[0].children[0].children[0]);
-    table[0].children[0].children[2].children[0].children[0].children[0].click();
-}
-
 // Checks to see if any players on the bench play that day
 function doesBenchPlay(playerList) {
+    
     var benchPlayers = playerList.get("Bench");
 
     for (i = 0; i < benchPlayers.length; i++) {
@@ -200,7 +209,216 @@ function isPositionLineupFull(playerList, position) {
             }
         }
     }
-    return true;
+    return true;  
+}
+
+// Checks to see if there are just Forwards or if they are split into C/RW/LW
+function checkPositionLeagueType(playerList) {
+
+    if (playerList.get("F").length > 0) {
+        return "Forwards";
+    }
+    else {
+        return "Wingers";
+    }
+}
+
+// Checks to see if everyone in the current lineup is already playing
+function isLineupFull(playerList, posLeagueType) {
+    if (posLeagueType == "Forwards") {
+        var forwards = playerList.get("F");
+        var defense = playerList.get("D");
+        var goalies = playerList.get("G");
+        var utility = playerList.get("UTIL");
+        var playerArr = [forwards, defense, goalies, utility];
+
+        return _checkPlayersPlaying(playerArr);
+    }
+    else {
+        var centres = playerList.get("C");
+        var rightWingers = playerList.get("RW");
+        var leftWingers = playerList.get("LW");
+        var defense = playerList.get("D");
+        var goalies = playerList.get("G");
+        var utility = playerList.get("UTIL");
+        var playerArr = [centres, rightWingers, leftWingers, defense, goalies, utility];
+
+        return _checkPlayersPlaying(playerArr);
+    }
     
+}
+
+// Helper method to check if players are playing
+function _checkPlayersPlaying(playerArr) {
+    for (i = 0; i < playerArr.length; i++) {
+        for (j = 0; j < playerArr[i].length; j++) {
+            if (!playerArr[i][j].isPlaying) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+async function setLineup(positionMap, playerList) {
+    
+    
+        var benchPlayers = playerList.get("Bench");
+        var moved = false;
+        
+        // Loop through all bench players
+        for (i = 0; i < benchPlayers.length; i++) {
+            // console.log("I", i);
+            moved = false;
+            if (benchPlayers[i].isPlaying) {
+                var posCors = POS_CORRELATIONS.get(benchPlayers[i].position);
+                // Loop through all positions they could play in except bench
+                // for (j = 0; j < posCors.length; j++) {
+                var j = 0;
+                while (j < posCors.length && moved == false) {
+                    // console.log("J", j);
+                    if (posCors[j] !== "Bench" && moved == false) {
+                        var playersArr = playerList.get(posCors[j]);
+                        // Check to see if there is an empty slot in that position in the current lineup
+                        if (isPositionEmpty(positionMap, playerList, posCors[j])) {
+                            movePlayers(playerList, benchPlayers[i], "E");
+                            moved = true;
+                        }
+                        // Check to see if players in those positions are playing and if not, move them
+                        else {
+                            var k = 0;
+                            // for (k = 0; k < playersArr.length; k++) {
+                            while (k < playersArr.length && moved == false) {
+                                // console.log("K", k);
+                                if (!playersArr[k].isPlaying) {
+                                    console.log("MOVING IN:", benchPlayers[i]);
+                                    console.log("MOVING OUT:", playersArr[k]);
+
+                                    await(movePlayers(playerList, benchPlayers[i], playersArr[k]));
+                                    
+                                    moved = true;
+                                    // console.log("First Statement: ", j < posCors.length && moved == false);
+                                    // console.log("Second Statement: ", k < playersArr.length && moved == false);
+                                }
+                                k++;
+                            }
+                            
+                        }
+                    }
+                    // Break out of the loop if the player has been moved
+                    else {
+                        break;
+                    }
+                    j++;
+                }
+            }
+        }
+    
+
+    return;
+}
+
+function isPositionEmpty(positionMap, playerList, position) {
+    var mapPosition = positionMap.get(position);
+    var playerPosition = playerList.get(position);
+
+    if (mapPosition > playerPosition.length) {
+        return true;
+    }
+
+    return false;
+}
+
+function timer(ms) { return new Promise(res => setTimeout(res, ms)); }
+
+// Update the index numbers on players when they changing positions
+async function movePlayers(playerList, playerMovingIn, playerMovingOut) {
+    var table = document.getElementsByClassName("Table__TBODY");
+    
+
+    if (playerMovingOut === "E") {
+        // Move into empty spot
+    }
+    else {
+        // Swap players
+        // console.log(playerMovingIn, playerMovingOut);
+        
+        
+        console.log(table[0].children[playerMovingIn.index].children[2].children[0]);
+        console.log(table[0].children[playerMovingOut.index].children[2].children[0]);
+        console.log("---------------------------------------");
+        // try {
+            
+                updatePlayerData(playerList, playerMovingIn, playerMovingOut);
+
+
+                
+                await(clickPlayer(playerMovingIn));
+                await(clickPlayer(playerMovingOut));
+                
+                
+            
+            
+        // }
+        // catch (TypeError) {
+        //     console.warn("Error swapping players", playerMovingIn, playerMovingOut);
+        //     return false;
+        // }
+        
+        
+    }
+    
+    return true;
+}
+
+async function clickPlayer(player) {
+    var table = document.getElementsByClassName("Table__TBODY");
+    console.log("CLICK FUNCTION", table[0].children[player.index].children[2].children[0].children[0]);
+    table[0].children[player.index].children[2].children[0].children[0].children[0].click();
+    await timer(500);
+    return;
+}
+
+function updatePlayerData(playerList, playerMovingIn, playerMovingOut) {
+    
+    
+    var tempPlayerIndex = playerMovingIn.index;
+    playerMovingIn.index = playerMovingOut.index;
+    playerMovingOut.index = tempPlayerIndex;
+
+    
+    
+    var tempPlayerIn = removePlayer(playerList, playerMovingIn);
+    var tempPlayerOut = removePlayer(playerList, playerMovingOut);
+    
+    
+    insertPlayer(playerList, tempPlayerOut, tempPlayerIn.currentPos);
+    insertPlayer(playerList, tempPlayerIn, tempPlayerOut.currentPos);
+
+    return;
+}
+
+// Check all available positions
+function removePlayer(playerList, player) {
+    var posPlayers = playerList.get(player.currentPos);
+    
+    for (i = 0; i < posPlayers.length; i++) {
+        
+        if (posPlayers[i].name === player.name) {
+            var deletedPlayer = posPlayers.splice(i, 1);
+            return deletedPlayer[0];
+        }
+    }
+
+    console.warn("ERROR - removePlayer: Player not found", player);
+    return;
+}
+
+function insertPlayer(playerList, player, position) {
+    var posPlayers = playerList.get(position);
+    posPlayers.push(player);
+
+    
+    return;
 }
 
