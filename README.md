@@ -25,8 +25,8 @@ In ESPN fantasy hockey, you have to manually set your lineup every day to ensure
 
 ## Screenshots
 
-![Start button inserted on top right of screen](image.jpg)
+![Start button inserted on top right of screen](Images/start_players_init.jpg)
 
-![Kyle Connor plays but is on bench](image.jpg)
+![Kyle Connor plays but is on bench](Images/show_start_players_before.jpg)
 
-![After pressing the button, Kyle Connor is set to play in the lineup](image.jpg)
+![After pressing the button, Kyle Connor is set to play in the lineup](Images/show_start_players_after.jpg)
