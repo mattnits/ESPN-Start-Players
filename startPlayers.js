@@ -310,6 +310,8 @@ async function setLineup(positionMap, playerList) {
                     j++;
                 }
                 if (moved === false) {
+                    
+                    checkMoveUtil(positionMap, playerList, benchPlayers[playerIndex]);
                     playerIndex++;
                 }
             }
@@ -445,3 +447,26 @@ function insertPlayer(playerList, player, position) {
     return;
 }
 
+// Checks to see if the UTIL position can be moved to the players actual position
+async function checkMoveUtil(positionMap, playerList, benchPlayer) {
+    var utilPlayers = playerList.get("UTIL");
+    
+    for (i = 0; i < utilPlayers.length; i++) {
+        console.log(isPositionLineupFull(playerList, utilPlayers[i].position));
+        
+        if (!isPositionLineupFull(playerList, utilPlayers[i].position)) {
+            var posArr = playerList.get(utilPlayers[i].position);
+            var j = 0;
+            var moved = false;
+            while (j < posArr.length && moved == false) {
+                if (!posArr[j].isPlaying) {
+                    await(movePlayers(playerList, utilPlayers[i], posArr[j]));
+                    await(movePlayers(playerList, benchPlayer, utilPlayers[i]));
+                    moved = true;
+                }
+            }
+        }
+    }
+
+    return;
+}
