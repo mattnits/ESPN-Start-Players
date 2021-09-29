@@ -2,7 +2,7 @@
 
 ## Description
 
-In ESPN fantasy hockey, you have to manually set your lineup every day to ensure that you achieve maximum points and give yourself the best chance at winning. In other fantasy hockey applications, there is a "start players" button for the week which ensures that all players for that week are set up so that you don't have to do it manually. I decided to implement this feature for ESPN by creating a chrome extension that can be used to start all players when accessing fantasy hockey through the espn website. 
+In ESPN fantasy hockey, you must manually set your lineup every day to ensure that you achieve maximum points and give yourself the best chance at winning. In other fantasy hockey applications, there is a "start players" button for the week which ensures that all players for that week are set up so that you don't have to do it manually. I decided to implement this feature for ESPN by creating a chrome extension that can be used to start all players when accessing fantasy hockey through the ESPN website.
 
 ---
 
@@ -25,7 +25,7 @@ In ESPN fantasy hockey, you have to manually set your lineup every day to ensure
 
 ## Screenshots
 
-![Start button inserted on top right of screen](Images/start_players_init.jpg)
+![Start button inserted on top right of screen](Images/start_players_init.png)
 
 ![Kyle Connor plays but is on bench](Images/show_start_players_before.jpg)
 
