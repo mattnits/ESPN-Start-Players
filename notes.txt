@@ -1,8 +1,0 @@
-// Need to apply error checking for players that have already played on the same day
-    -- Change the check for "--" to length of team name
-
-// Make sure you cant add players who have played previously (Ex. Last month)
-
-// NEED TO CHECK IF UTIL IS EMPTY
-
-// Gets caught in loop somewhere
