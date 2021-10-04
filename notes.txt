@@ -1,12 +1,8 @@
-1. Get the number of slots per position
-2. Get players status (if they play that day/ if they're injured)
-3. Figure out which player is best suited to play that day
+// Need to apply error checking for players that have already played on the same day
+    -- Change the check for "--" to length of team name
 
-- Need to move players that have multiple positions to play a different position to clear up space
+// Make sure you cant add players who have played previously (Ex. Last month)
 
+// NEED TO CHECK IF UTIL IS EMPTY
 
-// Tuesday november 16
-// Zibinejad in UTIL spot while C is left open
-// Put other player into UTIL and move Z to C
-
-// Make sure IR players dont go into open spots
+// Gets caught in loop somewhere

@@ -43,19 +43,21 @@ const observer = new MutationObserver(mutations => {
 observer.observe(document.body, { childList: true, subtree: true });
 
 // Starts active players
-function startPlayers() {
+async function startPlayers() {
     var playerList = initPlayerList();
     var positionMap = initPositionMap();
 
-    getPlayers(positionMap, playerList);
+    await(getPlayers(positionMap, playerList));
     
     var posLeagueType = checkPositionLeagueType(playerList);
-
-    if (doesBenchPlay(playerList) && !isLineupFull(playerList, posLeagueType)) {
-        setLineup(positionMap, playerList);
-    }
     
-    console.log(playerList);
+    if (doesBenchPlay(playerList) && !isLineupFull(playerList, posLeagueType)) {
+        await(setLineup(positionMap, playerList));
+        
+    }
+    console.log("Day Completed!");
+    
+    // console.log(playerList);
     
     return;
 }
@@ -91,12 +93,17 @@ function initPlayerList() {
 }
 
 // Gets all the player and goalie data
-function getPlayers(positionMap, playerList) {
+async function getPlayers(positionMap, playerList) {
     
     var table = document.getElementsByClassName("Table__TBODY");
     retrievePlayerTables(positionMap, playerList, table[0]);
     retrievePlayerTables(positionMap, playerList, table[3]);
     
+    return;
+}
+
+async function clearPlayers(playerList) {
+    playerList.clear();
     return;
 }
 
@@ -116,7 +123,6 @@ function retrievePlayerTables(positionMap, playerList, table) {
         currentPos = table.children[i].children[0].children[0].innerHTML;
 
         if (name !== "Player") {
-            
             // Opponent
             if (table.children[i].children[3].children[0].innerHTML === "--") {
                 isPlaying = false
@@ -139,35 +145,40 @@ function retrievePlayerTables(positionMap, playerList, table) {
             tempPlayer = new Players("EMPTY", null, null, null, currentPos, i);
         }
 
+        getCurrentPos(currentPos, tempPlayer, positionMap, playerList);
         
-        if (currentPos === "RW") {
-            updateMaps("RW", tempPlayer, positionMap, playerList);
-        }
-        else if (currentPos === "LW") {
-            updateMaps("LW", tempPlayer, positionMap, playerList);
-        }
-        else if (currentPos === "C") {
-            updateMaps("C", tempPlayer, positionMap, playerList);
-        }
-        else if (currentPos === "D") {
-            updateMaps("D", tempPlayer, positionMap, playerList);
-        }
-        else if (currentPos === "G") {
-            updateMaps("G", tempPlayer, positionMap, playerList);
-        }
-        else if (currentPos === "F") {
-            updateMaps("F", tempPlayer, positionMap, playerList);
-        }
-        else if (currentPos === "IR") {
-            updateMaps("IR", tempPlayer, positionMap, playerList);
-        }
-        else if (currentPos === "Bench") {
-            updateMaps("Bench", tempPlayer, positionMap, playerList);
-        }
-        else if (currentPos === "UTIL") {
-            updateMaps("UTIL", tempPlayer, positionMap, playerList);
-        }
         tempPlayer = null;
+    }
+}
+
+// Gets the current position of a player
+function getCurrentPos(currentPos, tempPlayer, positionMap, playerList) {
+    if (currentPos === "RW") {
+        updateMaps("RW", tempPlayer, positionMap, playerList);
+    }
+    else if (currentPos === "LW") {
+        updateMaps("LW", tempPlayer, positionMap, playerList);
+    }
+    else if (currentPos === "C") {
+        updateMaps("C", tempPlayer, positionMap, playerList);
+    }
+    else if (currentPos === "D") {
+        updateMaps("D", tempPlayer, positionMap, playerList);
+    }
+    else if (currentPos === "G") {
+        updateMaps("G", tempPlayer, positionMap, playerList);
+    }
+    else if (currentPos === "F") {
+        updateMaps("F", tempPlayer, positionMap, playerList);
+    }
+    else if (currentPos === "IR") {
+        updateMaps("IR", tempPlayer, positionMap, playerList);
+    }
+    else if (currentPos === "Bench") {
+        updateMaps("Bench", tempPlayer, positionMap, playerList);
+    }
+    else if (currentPos === "UTIL") {
+        updateMaps("UTIL", tempPlayer, positionMap, playerList);
     }
 }
 
@@ -282,8 +293,10 @@ async function setLineup(positionMap, playerList) {
                 while (j < posCors.length && moved == false) {
                     if (posCors[j] !== "Bench" && moved == false) {
                         var playersArr = playerList.get(posCors[j]);
+                        
                         // Check to see if there is an empty slot in that position in the current lineup
                         if (isPositionEmpty(positionMap, playerList, posCors[j])) {
+                            
                             movePlayers(playerList, benchPlayers[playerIndex], "E");
                             moved = true;
                         }
@@ -294,6 +307,7 @@ async function setLineup(positionMap, playerList) {
                                 if (!playersArr[k].isPlaying) {
                                     console.log("MOVING IN:", benchPlayers[playerIndex]);
                                     console.log("MOVING OUT:", playersArr[k]);
+                                    console.log("-------------------------------");
 
                                     await(movePlayers(playerList, benchPlayers[playerIndex], playersArr[k]));
                                     
@@ -343,18 +357,19 @@ function timer(ms) { return new Promise(res => setTimeout(res, ms)); }
 
 // Moves players from one position to another
 async function movePlayers(playerList, playerMovingIn, playerMovingOut) {
-
+    
     if (playerMovingOut === "E") {
+        
         // Move into empty spot
         var possiblePositions = POS_CORRELATIONS.get(playerMovingIn.position);
         var playerPosition;
         var j = 0, i = 0;
         var moved = false;
-
+        
         // Ignores bench position
         while (j < possiblePositions.length-1 && moved === false) {
             playerPosition = playerList.get(possiblePositions[j]);
-
+            
             while (i < playerPosition.length && moved === false) {
                 if (playerPosition[i].name === "EMPTY") {
                     var emptyPlayer = playerPosition[i];
@@ -366,6 +381,7 @@ async function movePlayers(playerList, playerMovingIn, playerMovingOut) {
                 }
                 i++;
             }
+            i = 0;
             j++;
         }
     }
@@ -377,10 +393,9 @@ async function movePlayers(playerList, playerMovingIn, playerMovingOut) {
         }
         catch (TypeError) {
             console.warn("Error swapping players", playerMovingIn, playerMovingOut);
+            console.warn("Error(Move Players): Error swapping players");
             return false;
         }
-        
-        
     }
     
     return true;
@@ -452,8 +467,8 @@ async function checkMoveUtil(positionMap, playerList, benchPlayer) {
     var utilPlayers = playerList.get("UTIL");
     
     for (i = 0; i < utilPlayers.length; i++) {
-        console.log(isPositionLineupFull(playerList, utilPlayers[i].position));
-        
+        // console.log(isPositionLineupFull(playerList, utilPlayers[i].position));
+
         if (!isPositionLineupFull(playerList, utilPlayers[i].position)) {
             var posArr = playerList.get(utilPlayers[i].position);
             var j = 0;
